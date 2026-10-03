@@ -2,7 +2,7 @@ import User from '../models/userModels.js'
 import jwt from 'jsonwebtoken';
 
 
-const JWT_SECRET =  process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || "expense_tracker_jwt_secret_key_2026_super_secure";
 
 export default async function authMiddleware(req,res,next){
     // grab the token

@@ -3,10 +3,10 @@ import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES;
-const createToken=(userId)=>
-jwt.sign({id:userId}, JWT_SECRET, {expiresIn: TOKEN_EXPIRES});
+const JWT_SECRET = process.env.JWT_SECRET || "expense_tracker_jwt_secret_key_2026_super_secure";
+const TOKEN_EXPIRES = process.env.TOKEN_EXPIRES || "7d";
+const createToken = (userId) =>
+  jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRES });
 
 // register a user
 export async function registerUser(req, res) {
@@ -47,8 +47,6 @@ try {
 // to login a user
 
 export async function loginUser(req, res) {
-
-     console.log("JWT_SECRET:", process.env.JWT_SECRET); // 👈 yaha add karo
     const { email, password } = req.body;
     if(!email || !password) {
         return res.status(400).json({success: false, message: "Please fill all the fields" });

@@ -1,5 +1,5 @@
-import React from 'react'
-import { X } from "lucide-react";
+import React from "react";
+import { X, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 const AddTransactionModal = ({
   showModal,
@@ -10,299 +10,238 @@ const AddTransactionModal = ({
   type = "both",
   title = "Add New Transaction",
   buttonText = "Add Transaction",
-  categories = ["Food", "Housing", "Transport", "Shopping", "Entertainment", "Utilities", "Healthcare", "Salary", "Freelance", "Investments","Bonus" , "Other"],
-  color = "teal"
+  categories = [
+    "Food",
+    "Housing",
+    "Transport",
+    "Shopping",
+    "Entertainment",
+    "Utilities",
+    "Healthcare",
+    "Salary",
+    "Freelance",
+    "Investment",
+    "Bonus",
+    "Other",
+  ],
+  color = "teal",
+  loading = false,
 }) => {
-
   if (!showModal) return null;
 
-  // Get current date in YYYY-MM-DD format
   const today = new Date();
   const currentYear = today.getFullYear();
-  const currentDate = today.toISOString().split('T')[0];
-  const minDate = `${currentYear}-01-01`;
-
-  const colorClass = "";
-
-  // return (
-  //   <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-  //     <div className="bg-white p-6 rounded-lg w-[400px]">
-  //       <div>
-  //           <h3>
-  //               {title}
-  //           </h3>
-  //           <button onClick={()=>setShowModal(false)}>
-  //               <X size={24} />
-  //           </button>
-  //       </div>
-  //       <form onSubmit={(e)=>{
-  //           e.preventDefault();
-  //           handleAddTransaction();
-  //       }}>
-  //          <div>
-  //           <div>
-  //               <label>Description</label>
-  //               <input type="text"
-  //               value={newTransaction.description} 
-  //               onChange={(e)=>
-  //                   setNewTransaction((prev)=>({
-  //                       ...prev, description:e.target.value
-  //                   }))
-  //               } placeholder={type==="both" ? "Salary, Funds, etc.":"Groceries, Rent, etc."} 
-  //               required/>
-  //           </div>
-
-  //           <div>
-  //               <label >Amount</label>
-  //               <input type="number"
-  //               value={newTransaction.amount} 
-  //               onChange={(e)=>
-  //                   setNewTransaction((prev)=>({
-  //                       ...prev, amount:e.target.value
-  //                   }))
-  //               } placeholder="0.00"
-  //               required/>
-  //           </div>
-
-  //          {type === "both" && (
-  //             <div>
-  //               <label >Type</label>
-  //               <div >
-  //                 <button 
-  //                   type="button"
-  //                   // className={modalStyles.typeButton(
-  //                   //   newTransaction.type === 'income', 
-  //                   //   modalStyles.colorClasses.teal.typeButtonSelected
-  //                   // )}
-  //                   onClick={() => setNewTransaction(prev => ({...prev, type: 'income'}))}
-  //                 >
-  //                   Income
-  //                 </button>
-  //                 <button 
-  //                   type="button"
-  //                   // className={modalStyles.typeButton(
-  //                   //   newTransaction.type === 'expense', 
-  //                   //   modalStyles.colorClasses.orange.typeButtonSelected
-  //                   // )}
-  //                   onClick={() => setNewTransaction(prev => ({...prev, type: 'expense'}))}
-  //                 >
-  //                   Expense
-  //                 </button>
-  //               </div>
-  //             </div>
-  //           )}
-  //           <div>
-  //              <label htmlFor="">Category</label> 
-  //              <select value={newTransaction.category}
-  //             onChange={(e)=>
-  //               setNewTransaction((prev)=>({
-  //                   ...prev,
-  //                   category:e.target.value
-  //               }))
-  //             } >
-  //                {
-  //                   categories.map((cat)=>(
-  //                       <option value={cat} key={cat}>
-  //                           {cat}
-  //                       </option>
-  //                   ))
-  //                }
-  //             </select>
-  //           </div>
-  //           <div>
-  //              <label htmlFor="">Date</label>
-  //              <input type="date" value={newTransaction.date} onChange={(e)=>{
-  //               setNewTransaction((prev)=>({
-  //                   ...prev,
-  //                   date:e.target.value
-  //               }))
-  //              }} min={minDate} max={currentDate} required/> 
-  //           </div>
-  //           <button type='submit'>
-  //              {buttonText}
-  //           </button>
-  //           </div> 
-  //       </form>
-  //     </div>
-  //   </div>
-  // )
-
+  const currentDate = today.toISOString().split("T")[0];
+  const minDate = `${currentYear - 2}-01-01`;
 
   return (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 px-4">
-    
-    {/* Modal Container */}
-    <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-5 sm:p-6">
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
-          {title}
-        </h3>
-        <button
-          onClick={() => setShowModal(false)}
-          className="p-1 rounded-full hover:bg-gray-100 transition"
-        >
-          <X size={22} className="text-gray-600" />
-        </button>
-      </div>
-
-      {/* Form */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleAddTransaction();
-        }}
-        className="space-y-4"
-      >
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Description
-          </label>
-          <input
-            type="text"
-            value={newTransaction.description}
-            onChange={(e) =>
-              setNewTransaction((prev) => ({
-                ...prev,
-                description: e.target.value,
-              }))
-            }
-            placeholder={
-              type === "both"
-                ? "Salary, Funds, etc."
-                : "Groceries, Rent, etc."
-            }
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-            required
-          />
-        </div>
-
-        {/* Amount */}
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Amount
-          </label>
-          <input
-            type="number"
-            value={newTransaction.amount}
-            onChange={(e) =>
-              setNewTransaction((prev) => ({
-                ...prev,
-                amount: e.target.value,
-              }))
-            }
-            placeholder="0.00"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-            required
-          />
-        </div>
-
-        {/* Type */}
-        {type === "both" && (
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-2">
-              Type
-            </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setNewTransaction((prev) => ({
-                    ...prev,
-                    type: "income",
-                  }))
-                }
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
-                  newTransaction.type === "income"
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Income
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setNewTransaction((prev) => ({
-                    ...prev,
-                    type: "expense",
-                  }))
-                }
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
-                  newTransaction.type === "expense"
-                    ? "bg-orange-500 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Expense
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Category
-          </label>
-          <select
-            value={newTransaction.category}
-            onChange={(e) =>
-              setNewTransaction((prev) => ({
-                ...prev,
-                category: e.target.value,
-              }))
-            }
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs z-50 px-4 py-6 animate-fadeIn">
+      {/* Modal Container */}
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-5 sm:p-7 max-h-[92vh] overflow-y-auto border border-gray-100">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800 tracking-tight">
+            {title}
+          </h3>
+          <button
+            onClick={() => setShowModal(false)}
+            className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+            aria-label="Close modal"
           >
-            {categories.map((cat) => (
-              <option value={cat} key={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            <X size={20} />
+          </button>
         </div>
 
-        {/* Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Date
-          </label>
-          <input
-            type="date"
-            value={newTransaction.date}
-            onChange={(e) => {
-              setNewTransaction((prev) => ({
-                ...prev,
-                date: e.target.value,
-              }));
-            }}
-            min={minDate}
-            max={currentDate}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-            required
-          />
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-lg font-medium transition"
+        {/* Form */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleAddTransaction();
+          }}
+          className="space-y-4"
         >
-          {buttonText}
-        </button>
-      </form>
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
+              Description
+            </label>
+            <input
+              type="text"
+              value={newTransaction.description}
+              onChange={(e) =>
+                setNewTransaction((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder={
+                type === "both"
+                  ? "Salary, Freelance, Grocery, etc."
+                  : type === "income"
+                  ? "Salary, Client payment, etc."
+                  : "Groceries, Rent, Coffee, etc."
+              }
+              className="w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              required
+            />
+          </div>
+
+          {/* Amount */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
+              Amount ($)
+            </label>
+            <input
+              type="number"
+              step="any"
+              min="0.01"
+              value={newTransaction.amount}
+              onChange={(e) =>
+                setNewTransaction((prev) => ({
+                  ...prev,
+                  amount: e.target.value,
+                }))
+              }
+              placeholder="0.00"
+              className="w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
+              required
+            />
+          </div>
+
+          {/* Type Selector (if both) */}
+          {type === "both" && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 tracking-tight">
+                  Transaction Type
+                </label>
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full capitalize transition-colors ${
+                    newTransaction.type === "income"
+                      ? "text-emerald-700 bg-emerald-50 border border-emerald-200/70"
+                      : "text-rose-700 bg-rose-50 border border-rose-200/70"
+                  }`}
+                >
+                  {newTransaction.type}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setNewTransaction((prev) => ({
+                      ...prev,
+                      type: "income",
+                      category: "Salary",
+                    }))
+                  }
+                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+                    newTransaction.type === "income"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/25 border border-emerald-500/30"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                      newTransaction.type === "income"
+                        ? "bg-white/20 text-white"
+                        : "bg-emerald-100 text-emerald-600"
+                    }`}
+                  >
+                    <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </div>
+                  <span>+ Income</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setNewTransaction((prev) => ({
+                      ...prev,
+                      type: "expense",
+                      category: "Food",
+                    }))
+                  }
+                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+                    newTransaction.type === "expense"
+                      ? "bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-md shadow-rose-500/25 border border-rose-400/30"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                      newTransaction.type === "expense"
+                        ? "bg-white/20 text-white"
+                        : "bg-rose-100 text-rose-600"
+                    }`}
+                  >
+                    <ArrowDownRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </div>
+                  <span>- Expense</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Category */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
+              Category
+            </label>
+            <select
+              value={newTransaction.category}
+              onChange={(e) =>
+                setNewTransaction((prev) => ({
+                  ...prev,
+                  category: e.target.value,
+                }))
+              }
+              className="w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer"
+            >
+              {categories.map((cat) => (
+                <option value={cat} key={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
+              Transaction Date
+            </label>
+            <input
+              type="date"
+              value={newTransaction.date}
+              onChange={(e) => {
+                setNewTransaction((prev) => ({
+                  ...prev,
+                  date: e.target.value,
+                }));
+              }}
+              min={minDate}
+              max={currentDate}
+              className="w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer"
+              required
+            />
+          </div>
+
+          {/* Submit Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold text-sm shadow-md shadow-teal-500/20 transition cursor-pointer disabled:opacity-60"
+            >
+              {loading ? "Processing..." : buttonText}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-}
-
-
-export default AddTransactionModal
-
-
-// this file is styling
+export default AddTransactionModal;
