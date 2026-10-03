@@ -228,27 +228,100 @@ const Sidebar = ({
         )}
 
         {/* Footer info & Logout/Sign-in */}
-        <div className="p-3 border-t border-slate-100">
-          <button
-            onClick={handleAuthAction}
-            onMouseEnter={() => setHoveredItem("auth")}
-            onMouseLeave={() => setHoveredItem(null)}
-            className={`relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl font-medium text-sm transition cursor-pointer ${
-              isGuest
-                ? "text-teal-700 bg-teal-50/70 hover:bg-teal-100/70"
-                : "text-red-500 hover:bg-red-50 hover:text-red-600"
-            } ${sidebarcollapsed ? "justify-center px-0 w-12 h-12 mx-auto" : ""}`}
-          >
-            {isGuest ? <LogIn size={18} /> : <LogOut size={18} />}
-            {!sidebarcollapsed && <span>{isGuest ? "Sign In / Register" : "Log Out"}</span>}
-
-            {sidebarcollapsed && hoveredItem === "auth" && (
-              <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap z-50 pointer-events-none animate-fadeIn flex items-center gap-1.5">
-                <span>{isGuest ? "Sign In" : "Log Out"}</span>
-                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45" />
+        <div className="p-3 border-t border-slate-100/80 mt-auto shrink-0">
+          {isGuest ? (
+            /* Guest Sign In Button */
+            <button
+              onClick={handleAuthAction}
+              onMouseEnter={() => setHoveredItem("auth")}
+              onMouseLeave={() => setHoveredItem(null)}
+              className={`relative w-full flex items-center gap-3 rounded-2xl transition-all duration-200 cursor-pointer group ${
+                sidebarcollapsed
+                  ? "w-12 h-12 justify-center mx-auto bg-teal-50/80 hover:bg-teal-100 text-teal-700 border border-teal-200/80 shadow-2xs"
+                  : "p-2.5 bg-gradient-to-r from-teal-50/60 to-cyan-50/40 hover:from-teal-100/70 hover:to-cyan-100/60 border border-teal-200/70 hover:border-teal-300 text-teal-800 shadow-2xs hover:shadow-xs"
+              }`}
+            >
+              <div
+                className={`flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 ${
+                  sidebarcollapsed
+                    ? "text-teal-700"
+                    : "w-8 h-8 bg-teal-600 text-white shadow-2xs group-hover:scale-105"
+                }`}
+              >
+                <LogIn size={16} strokeWidth={2.2} />
               </div>
-            )}
-          </button>
+
+              {!sidebarcollapsed && (
+                <div className="flex-1 text-left min-w-0">
+                  <div className="text-xs font-bold leading-tight truncate">Sign In / Register</div>
+                  <div className="text-[10px] text-teal-600/80 font-medium truncate">Sync your data</div>
+                </div>
+              )}
+
+              {!sidebarcollapsed && (
+                <ChevronRight
+                  size={14}
+                  className="text-teal-400 group-hover:translate-x-0.5 group-hover:text-teal-700 transition-all shrink-0"
+                />
+              )}
+
+              {/* Collapsed Tooltip */}
+              {sidebarcollapsed && hoveredItem === "auth" && (
+                <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap z-50 pointer-events-none animate-fadeIn flex items-center gap-1.5">
+                  <span>Sign In</span>
+                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45" />
+                </div>
+              )}
+            </button>
+          ) : (
+            /* Logged-In User Sign Out Button */
+            <button
+              onClick={handleAuthAction}
+              onMouseEnter={() => setHoveredItem("auth")}
+              onMouseLeave={() => setHoveredItem(null)}
+              className={`relative w-full flex items-center gap-3 rounded-2xl transition-all duration-200 cursor-pointer group ${
+                sidebarcollapsed
+                  ? "w-12 h-12 justify-center mx-auto bg-slate-50 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200/80 hover:border-rose-200 shadow-2xs"
+                  : "p-2.5 bg-gradient-to-r from-slate-50/70 to-slate-100/40 hover:from-rose-50/50 hover:to-orange-50/40 border border-slate-200/70 hover:border-rose-200/90 text-slate-600 hover:text-rose-600 shadow-2xs hover:shadow-xs"
+              }`}
+            >
+              <div
+                className={`flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 ${
+                  sidebarcollapsed
+                    ? "text-slate-500 group-hover:text-rose-600 group-hover:scale-110"
+                    : "w-8 h-8 bg-white border border-slate-200/80 text-slate-500 group-hover:border-rose-200 group-hover:bg-rose-500 group-hover:text-white shadow-2xs group-hover:scale-105"
+                }`}
+              >
+                <LogOut size={16} strokeWidth={2.2} className="group-hover:-translate-x-0.5 transition-transform" />
+              </div>
+
+              {!sidebarcollapsed && (
+                <div className="flex-1 text-left min-w-0">
+                  <div className="text-xs font-bold leading-tight text-slate-700 group-hover:text-rose-600 transition-colors">
+                    Sign Out
+                  </div>
+                  <div className="text-[10px] text-slate-400 group-hover:text-rose-400 transition-colors font-medium">
+                    End current session
+                  </div>
+                </div>
+              )}
+
+              {!sidebarcollapsed && (
+                <ChevronRight
+                  size={14}
+                  className="text-slate-300 group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all shrink-0"
+                />
+              )}
+
+              {/* Collapsed Tooltip */}
+              {sidebarcollapsed && hoveredItem === "auth" && (
+                <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-xl whitespace-nowrap z-50 pointer-events-none animate-fadeIn flex items-center gap-1.5">
+                  <span>Sign Out</span>
+                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45" />
+                </div>
+              )}
+            </button>
+          )}
         </div>
       </motion.aside>
 
@@ -352,10 +425,18 @@ const Sidebar = ({
                       setMobileOpen(false);
                       handleAuthAction();
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 rounded-2xl transition cursor-pointer"
+                    className="w-full flex items-center justify-between p-3.5 text-sm font-bold text-rose-600 bg-rose-50/70 hover:bg-rose-100/70 border border-rose-200/70 rounded-2xl transition cursor-pointer shadow-2xs group"
                   >
-                    <LogOut size={18} />
-                    <span>Log Out</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
+                        <LogOut size={16} strokeWidth={2.2} />
+                      </div>
+                      <div className="text-left">
+                        <div className="leading-tight text-rose-700">Sign Out</div>
+                        <div className="text-[10px] text-rose-400 font-normal">End current session</div>
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className="text-rose-400 group-hover:translate-x-0.5 transition-transform" />
                   </button>
                 )}
               </div>
