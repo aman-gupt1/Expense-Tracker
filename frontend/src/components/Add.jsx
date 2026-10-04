@@ -35,9 +35,9 @@ const AddTransactionModal = ({
   const minDate = `${currentYear - 2}-01-01`;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs z-50 px-4 py-6 animate-fadeIn">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs z-[60] px-4 py-6 animate-fadeIn">
       {/* Modal Container */}
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-5 sm:p-7 max-h-[92vh] overflow-y-auto border border-gray-100">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-5 sm:p-7 max-h-[92vh] overflow-y-auto custom-scrollbar border border-gray-100">
         {/* Header */}
         <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
           <h3 className="text-lg sm:text-xl font-bold text-gray-800 tracking-tight">

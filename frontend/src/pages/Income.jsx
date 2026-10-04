@@ -38,6 +38,17 @@ import { getAuthHeaders } from "../utils/auth";
 import { formatCurrency } from "../utils/currency";
 import { toast } from "react-toastify";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
+import Pagination from "../components/Pagination";
+import CategoryDropdown from "../components/CategoryDropdown";
+
+const INCOME_FILTER_OPTIONS = [
+  { value: "all", label: "All Categories" },
+  { value: "Salary", label: "Salary", icon: CATEGORY_ICONS_Inc.Salary },
+  { value: "Freelance", label: "Freelance", icon: CATEGORY_ICONS_Inc.Freelance },
+  { value: "Investment", label: "Investment", icon: CATEGORY_ICONS_Inc.Investment },
+  { value: "Bonus", label: "Bonus", icon: CATEGORY_ICONS_Inc.Bonus },
+  { value: "Other", label: "Other", icon: CATEGORY_ICONS_Inc.Other },
+];
 
 const API_BASE = import.meta.env.VITE_API_URL + "/api";
 
@@ -84,8 +95,14 @@ const IncomeChart = ({ chartData, timeFrame, timeFrameRange, currency = "$", tot
       </div>
     </div>
 
-    <div className="w-full h-[260px] sm:h-[320px] min-h-[220px]">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-[260px] sm:h-[320px] min-h-[220px] min-w-0 min-h-0">
+      <ResponsiveContainer
+        width="100%"
+        height="100%"
+        minWidth={0}
+        minHeight={0}
+        initialDimension={{ width: 500, height: 300 }}
+      >
         <BarChart data={chartData} margin={{ top: 15, right: 15, left: -10, bottom: 5 }}>
           <defs>
             <linearGradient id="incomeBarGradient" x1="0" y1="0" x2="0" y2="1">
@@ -165,9 +182,11 @@ const IncomePage = () => {
   }, [isGuest, contextTransactions]);
 
   const [timeFrame, setTimeFrame] = useState("monthly");
+  const [selectedDate, setSelectedDate] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [showAll, setShowAll] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -199,7 +218,10 @@ const IncomePage = () => {
   });
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const timeFrameRange = useMemo(() => getTimeFrameRange(timeFrame, null), [timeFrame]);
+  const timeFrameRange = useMemo(
+    () => getTimeFrameRange(timeFrame, selectedDate),
+    [timeFrame, selectedDate]
+  );
   const chartPoints = useMemo(
     () => generateChartPoints(timeFrame, timeFrameRange),
     [timeFrame, timeFrameRange]
@@ -253,6 +275,26 @@ const IncomePage = () => {
     return list;
   }, [timeFrameTransactions, filter, searchQuery]);
 
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery, timeFrame, selectedDate]);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
+    return filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredTransactions, safeCurrentPage, itemsPerPage]);
+
   // Chart data
   const chartData = useMemo(() => {
     const data = chartPoints.map((point, index) => ({
@@ -261,10 +303,15 @@ const IncomePage = () => {
       income: 0,
     }));
 
+    const isSingleDay =
+      timeFrame === "daily" ||
+      timeFrame === "custom" ||
+      Boolean(selectedDate);
+
     filteredTransactions.forEach((transaction) => {
       const transDate = new Date(transaction.date);
       const point = data.find((d) =>
-        timeFrame === "daily"
+        isSingleDay
           ? d.hour === transDate.getHours()
           : timeFrame === "yearly"
           ? d.date.getMonth() === transDate.getMonth()
@@ -544,48 +591,55 @@ const cardItemVariants = {
       animate="visible"
       className="space-y-6 sm:space-y-8"
     >
-      {/* 1. HEADER CARD */}
+      {/* 1. TOP HERO HEADER & TIMEFRAME SELECTOR */}
       <motion.div
         variants={cardItemVariants}
-        className="relative bg-white rounded-3xl p-5 sm:p-7 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_16px_36px_-8px_rgba(0,0,0,0.08)] border border-slate-200/80 hover:border-emerald-300/70 transition-all duration-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 overflow-hidden group"
+        whileHover={{ y: -2, transition: { duration: 0.2 } }}
+        className="relative z-30 bg-white/95 backdrop-blur-xl rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xs hover:shadow-xl border border-slate-200/80 hover:border-emerald-300/70 transition-all duration-300 group"
       >
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-emerald-500/10 via-teal-500/5 to-transparent rounded-bl-full group-hover:scale-110 transition-transform duration-500" />
+        </div>
 
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/70 mb-2.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Revenue & Inflows Analytics
+        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/70 mb-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Revenue & Inflows Analytics
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-800 tracking-tight">
+              Income Streams
+            </h1>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1 font-medium max-w-xl flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span>Active Window: <strong className="text-slate-700 font-bold">{timeFrameRange?.label || timeFrame}</strong></span>
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
-            Income Streams
-          </h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-1">
-            Track, filter, and optimize all revenue earnings and inflows
-          </p>
-        </div>
 
-        <button
-          onClick={handleAddClick}
-          className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/30 transition-all cursor-pointer group active:scale-[0.98]"
-        >
-          <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300 stroke-[2.5]" />
-          <span>Add Income</span>
-        </button>
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end">
+            <TimeFrameSelector
+              timeFrame={timeFrame}
+              setTimeFrame={setTimeFrame}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              options={["daily", "weekly", "monthly", "yearly"]}
+              color="teal"
+            />
+
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleAddClick}
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/35 transition-all cursor-pointer group active:scale-[0.98]"
+            >
+              <div className="p-1 rounded-lg bg-white/20 group-hover:rotate-90 transition-transform duration-300">
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <span>Add Income</span>
+            </motion.button>
+          </div>
+        </div>
       </motion.div>
-
-      {/* 2. TIMEFRAME SELECTOR */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <TimeFrameSelector
-          timeFrame={timeFrame}
-          setTimeFrame={setTimeFrame}
-          options={["daily", "weekly", "monthly", "yearly"]}
-          color="teal"
-        />
-        <div className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-          <span>Active Window: <strong className="text-slate-700 font-bold">{timeFrameRange?.label || timeFrame}</strong></span>
-        </div>
-      </div>
 
       {/* 3. SUMMARY STATS CARDS */}
       <motion.div variants={cardItemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
@@ -645,7 +699,7 @@ const cardItemVariants = {
       {/* 5. SEARCH & FILTER CONTROLS */}
       <motion.div
         variants={cardItemVariants}
-        className="bg-white rounded-3xl p-4 sm:p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] border border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-3"
+        className="relative z-20 bg-white rounded-3xl p-4 sm:p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] border border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-3"
       >
         {/* Real-time Search input */}
         <div className="relative w-full md:w-80">
@@ -668,22 +722,13 @@ const cardItemVariants = {
         </div>
 
         {/* Category filter & Export button */}
-        <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto justify-end">
-          <div className="relative w-full sm:w-auto">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full sm:w-auto appearance-none bg-slate-50/80 hover:bg-slate-50 border border-slate-200/80 rounded-2xl pl-3.5 pr-9 py-2.5 text-xs sm:text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all cursor-pointer shadow-2xs"
-            >
-              <option value="all">All Categories</option>
-              <option value="Salary">Salary</option>
-              <option value="Freelance">Freelance</option>
-              <option value="Investment">Investment</option>
-              <option value="Bonus">Bonus</option>
-              <option value="Other">Other</option>
-            </select>
-            <Filter className="w-3.5 h-3.5 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto justify-end">
+          <CategoryDropdown
+            value={filter}
+            onChange={setFilter}
+            options={INCOME_FILTER_OPTIONS}
+            colorTheme="emerald"
+          />
 
           <button
             onClick={handleExport}
@@ -698,60 +743,71 @@ const cardItemVariants = {
       {/* 6. TRANSACTIONS LIST */}
       <motion.div
         variants={cardItemVariants}
-        className="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-200/80 space-y-3"
+        className="bg-white rounded-3xl p-5 sm:p-6 pb-4 sm:pb-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-slate-200/80 overflow-hidden flex flex-col justify-between"
       >
-        <div className="flex justify-between items-center mb-2 px-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-extrabold text-slate-800 text-base">
-              Income Records
-            </h3>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/70">
-              {filteredTransactions.length}
-            </span>
+        {/* Styled Table Header */}
+        <div className="-mx-5 sm:-mx-6 -mt-5 sm:-mt-6 px-5 sm:px-6 py-4 mb-4 bg-gradient-to-r from-emerald-50/90 via-teal-50/50 to-slate-50/80 border-b border-emerald-100/90 flex justify-between items-center transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-emerald-200/90 text-emerald-600 flex items-center justify-center shadow-2xs shrink-0">
+              <TrendingUp className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-slate-800 text-base leading-tight">
+                  Income Records
+                </h3>
+                <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-2xs">
+                  {filteredTransactions.length}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                All confirmed inflows and revenue items
+              </p>
+            </div>
           </div>
 
-          <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Real-time Live Records
-          </span>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-emerald-200/80 text-xs font-bold text-emerald-800 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Live Records</span>
+          </div>
         </div>
 
         <div className="space-y-2.5">
-          {filteredTransactions
-            .slice(0, showAll ? filteredTransactions.length : 8)
-            .map((t) => (
-              <TransactionItem
-                key={t.id}
-                transaction={t}
-                isEditing={editingId === t.id}
-                editForm={editForm}
-                setEditForm={setEditForm}
-                onSave={handleEditTransaction}
-                onCancel={() => setEditingId(null)}
-                onDelete={handleDeleteClick}
-                onEdit={() => {
-                  if (isGuest) {
-                    requestAuth("edit this income transaction");
-                    return false;
-                  }
-                  return true;
-                }}
-                type="income"
-                categoryIcons={CATEGORY_ICONS_Inc}
-                setEditingId={setEditingId}
-                currency={currency}
-              />
-            ))}
+          {paginatedTransactions.map((t) => (
+            <TransactionItem
+              key={t.id}
+              transaction={t}
+              isEditing={editingId === t.id}
+              editForm={editForm}
+              setEditForm={setEditForm}
+              onSave={handleEditTransaction}
+              onCancel={() => setEditingId(null)}
+              onDelete={handleDeleteClick}
+              onEdit={() => {
+                if (isGuest) {
+                  requestAuth("edit this income transaction");
+                  return false;
+                }
+                return true;
+              }}
+              type="income"
+              categoryIcons={CATEGORY_ICONS_Inc}
+              setEditingId={setEditingId}
+              currency={currency}
+            />
+          ))}
         </div>
 
-        {!showAll && filteredTransactions.length > 8 && (
-          <button
-            onClick={() => setShowAll(true)}
-            className="w-full py-3 mt-2 text-emerald-700 hover:text-emerald-800 bg-emerald-50/60 hover:bg-emerald-100/80 border border-emerald-200/60 rounded-2xl flex items-center justify-center gap-2 font-bold text-xs sm:text-sm transition cursor-pointer shadow-2xs"
-          >
-            <Eye className="w-4 h-4" />
-            <span>View All ({filteredTransactions.length}) Records</span>
-          </button>
+        {filteredTransactions.length > 0 && (
+          <Pagination
+            currentPage={safeCurrentPage}
+            totalPages={totalPages}
+            totalItems={filteredTransactions.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={(p) => setCurrentPage(p)}
+            onItemsPerPageChange={(count) => setItemsPerPage(count)}
+            colorTheme="emerald"
+          />
         )}
 
         {filteredTransactions.length === 0 && (

@@ -60,7 +60,6 @@ const Sidebar = ({
       navigate("/login");
     } else {
       onLogout?.();
-      navigate("/login");
     }
   };
 
@@ -69,21 +68,21 @@ const Sidebar = ({
       {/* ===== DESKTOP SIDEBAR (FULL HEIGHT TOP:0) ===== */}
       <motion.aside
         ref={sidebarRef}
-        className="relative hidden md:flex flex-col shrink-0 bg-white/95 backdrop-blur-md border-r border-slate-100 shadow-xs sticky top-0 h-screen z-30 select-none pb-2"
+        className="relative hidden md:flex flex-col shrink-0 bg-white/95 backdrop-blur-md border-r border-slate-100 shadow-xs sticky top-0 h-screen z-[45] select-none pb-2"
         animate={{ width: sidebarcollapsed ? 96 : 240 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {/* Floating Border Toggle Button */}
         <button
           onClick={toggleSidebar}
-          className="hidden md:flex absolute -right-3.5 top-5 z-40 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-xs hover:shadow-md items-center justify-center text-slate-500 hover:text-teal-600 hover:border-teal-400 transition-all cursor-pointer active:scale-95 group"
+          className="hidden md:flex absolute -right-4 top-5 z-50 w-8 h-8 rounded-full bg-white hover:bg-teal-600 text-slate-700 hover:text-white border-2 border-slate-300/90 hover:border-teal-600 shadow-md shadow-slate-900/10 hover:shadow-teal-500/30 items-center justify-center transition-all duration-200 cursor-pointer active:scale-90 group"
           title={sidebarcollapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label={sidebarcollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {sidebarcollapsed ? (
-            <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight size={16} strokeWidth={2.8} className="group-hover:translate-x-0.5 transition-transform" />
           ) : (
-            <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+            <ChevronLeft size={16} strokeWidth={2.8} className="group-hover:-translate-x-0.5 transition-transform" />
           )}
         </button>
 
@@ -161,7 +160,7 @@ const Sidebar = ({
         )}
 
         {/* Navigation Menu List */}
-        <ul className="flex-1 space-y-1.5 px-3 overflow-y-auto">
+        <ul className="flex-1 space-y-1.5 px-3 overflow-y-auto custom-scrollbar">
           {MENU_ITEMS.map(({ text, path, icon: Icon }) => {
             const isActive = pathname === path;
 
@@ -331,7 +330,7 @@ const Sidebar = ({
           <>
             {/* Backdrop Overlay */}
             <motion.div
-              className="md:hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50"
+              className="md:hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[60]"
               onClick={() => setMobileOpen(false)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -341,7 +340,7 @@ const Sidebar = ({
 
             {/* Slide-out Drawer */}
             <motion.div
-              className="md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl flex flex-col"
+              className="md:hidden fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white z-[60] shadow-2xl flex flex-col"
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
@@ -370,7 +369,7 @@ const Sidebar = ({
               </div>
 
               {/* Menu Links */}
-              <ul className="flex-1 p-3 space-y-1.5 overflow-y-auto">
+              <ul className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
                 {MENU_ITEMS.map(({ text, path, icon: Icon }) => {
                   const isActive = pathname === path;
 

@@ -26,11 +26,12 @@ import {
   ChevronRight,
   Filter,
 } from "lucide-react";
-import { Cell, Legend, Pie, ResponsiveContainer, PieChart } from "recharts";
+import { Cell, Pie, ResponsiveContainer, PieChart } from "recharts";
 import { getTimeFrameRange, getPreviousTimeFrameRange, calculateData } from "../components/Helper";
 import FinancialCard from "../components/FinancialCard";
 import GaugeCard from "../components/GauseCard";
 import AddTransactionModal from "../components/Add";
+import TimeFrameSelector from "../components/TimeFrame";
 import { dummyTransactions, dummyBudget, COLORS } from "../assets/dummy";
 import { getAuthHeaders } from "../utils/auth";
 import { formatCurrency } from "../utils/currency";
@@ -97,6 +98,7 @@ const Dashboard = () => {
   }, [isGuest, contextTransactions]);
 
   const [timeFrame, setTimeFrame] = useState("monthly");
+  const [selectedDate, setSelectedDate] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -111,8 +113,14 @@ const Dashboard = () => {
     category: "Food",
   });
 
-  const timeFrameRange = useMemo(() => getTimeFrameRange(timeFrame), [timeFrame]);
-  const prevTimeFrameRange = useMemo(() => getPreviousTimeFrameRange(timeFrame), [timeFrame]);
+  const timeFrameRange = useMemo(
+    () => getTimeFrameRange(timeFrame, selectedDate),
+    [timeFrame, selectedDate]
+  );
+  const prevTimeFrameRange = useMemo(
+    () => getPreviousTimeFrameRange(timeFrame, selectedDate),
+    [timeFrame, selectedDate]
+  );
 
   const isDateInRange = (date, start, end) => {
     if (!date) return false;
@@ -259,7 +267,7 @@ const Dashboard = () => {
 
   // Recent transactions list with tab filter and search
   const recentTransactionsList = useMemo(() => {
-    let list = [...(transactions || [])];
+    let list = selectedDate ? [...(filteredTransactions || [])] : [...(transactions || [])];
     if (activeTab === "income") list = list.filter((t) => t.type === "income");
     if (activeTab === "expense") list = list.filter((t) => t.type === "expense");
 
@@ -274,7 +282,7 @@ const Dashboard = () => {
     }
 
     return list.slice(0, 7);
-  }, [transactions, activeTab, searchQuery]);
+  }, [transactions, filteredTransactions, selectedDate, activeTab, searchQuery]);
 
   const hasTransactions = transactions.length > 0;
 
@@ -289,10 +297,12 @@ const Dashboard = () => {
       <motion.div
         variants={cardItemVariants}
         whileHover={{ y: -2, transition: { duration: 0.2 } }}
-        className="relative bg-white/95 backdrop-blur-xl rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xs hover:shadow-xl border border-slate-200/70 hover:border-teal-200/80 transition-all duration-300 overflow-hidden group"
+        className="relative z-30 bg-white/95 backdrop-blur-xl rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xs hover:shadow-xl border border-slate-200/70 hover:border-teal-200/80 transition-all duration-300 group"
       >
         {/* Subtle decorative background glow */}
-        <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-teal-500/10 via-cyan-500/5 to-transparent rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-teal-500/10 via-cyan-500/5 to-transparent rounded-bl-full group-hover:scale-110 transition-transform duration-500" />
+        </div>
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -312,38 +322,22 @@ const Dashboard = () => {
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-800 tracking-tight">
               Finance Dashboard
             </h1>
-            <p className="text-slate-500 text-xs sm:text-sm mt-1 font-medium max-w-xl">
-              {user?.name
-                ? `Welcome back, ${user.name}! Here is your real-time financial trajectory.`
-                : "Monitor, balance, and optimize your income, expenses, and savings goals."}
+            <p className="text-slate-500 text-xs sm:text-sm mt-1 font-medium max-w-xl flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+              <span>Active Window: <strong className="text-slate-700 font-bold">{timeFrameRange?.label || timeFrame}</strong></span>
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full md:w-auto justify-between md:justify-end">
-            {/* Animated Timeframe Pill Selector */}
-            <div className="inline-flex bg-slate-100/90 p-1 rounded-2xl border border-slate-200/70 text-xs sm:text-sm shadow-2xs">
-              {["daily", "weekly", "monthly", "yearly"].map((frame) => {
-                const isActive = timeFrame === frame;
-                return (
-                  <button
-                    key={frame}
-                    onClick={() => setTimeFrame(frame)}
-                    className={`relative px-3.5 py-1.5 rounded-xl font-bold capitalize transition-all duration-200 cursor-pointer ${
-                      isActive ? "text-teal-700 shadow-xs" : "text-slate-500 hover:text-slate-900"
-                    }`}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeTimeframePill"
-                        className="absolute inset-0 bg-white rounded-xl shadow-xs border border-slate-200/50"
-                        transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                      />
-                    )}
-                    <span className="relative z-10">{frame}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {/* Unified TimeFrame & Date Picker */}
+            <TimeFrameSelector
+              timeFrame={timeFrame}
+              setTimeFrame={setTimeFrame}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              options={["daily", "weekly", "monthly", "yearly"]}
+              color="cyan"
+            />
 
             {/* Vibrant Add Transaction CTA */}
             <motion.button
@@ -626,10 +620,16 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="w-full h-64 sm:h-72 min-h-[250px] flex items-center justify-center relative">
+            <div className="w-full h-44 sm:h-48 min-h-[170px] min-w-0 min-h-0 flex items-center justify-center relative">
               {expenseDistribution && expenseDistribution.length > 0 ? (
                 <>
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                    minWidth={0}
+                    minHeight={0}
+                    initialDimension={{ width: 280, height: 180 }}
+                  >
                     <PieChart onMouseLeave={() => setActivePieIndex(null)}>
                       <Pie
                         data={expenseDistribution}
@@ -637,9 +637,9 @@ const Dashboard = () => {
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        innerRadius={64}
-                        outerRadius={92}
-                        paddingAngle={expenseDistribution.length > 1 ? 4 : 0}
+                        innerRadius={50}
+                        outerRadius={74}
+                        paddingAngle={expenseDistribution.length > 1 ? 3 : 0}
                         onMouseEnter={(_, index) => setActivePieIndex(index)}
                         onMouseLeave={() => setActivePieIndex(null)}
                       >
@@ -654,49 +654,37 @@ const Dashboard = () => {
                           />
                         ))}
                       </Pie>
-                      <Legend
-                        verticalAlign="bottom"
-                        height={40}
-                        iconType="circle"
-                        onMouseEnter={(e) => {
-                          if (e && e.value) {
-                            const idx = expenseDistribution.findIndex((item) => item.name === e.value);
-                            if (idx !== -1) setActivePieIndex(idx);
-                          }
-                        }}
-                        onMouseLeave={() => setActivePieIndex(null)}
-                      />
                     </PieChart>
                   </ResponsiveContainer>
 
-                  {/* Donut Center Dynamic Readout HUD (Fixes Tooltip Overlap) */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-                    <div className="w-24 h-24 rounded-full bg-white/95 backdrop-blur-xs border border-slate-100 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] flex flex-col items-center justify-center p-1.5 text-center transition-all duration-200">
+                  {/* Donut Center Dynamic Readout HUD */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <div className="w-20 h-20 rounded-full bg-white/95 backdrop-blur-xs border border-slate-100 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] flex flex-col items-center justify-center p-1 text-center transition-all duration-200">
                       {activePieCategory ? (
                         <div className="flex flex-col items-center justify-center leading-tight">
                           <span
-                            className="text-[10px] font-bold uppercase tracking-wider truncate max-w-[80px]"
+                            className="text-[9px] font-bold uppercase tracking-wider truncate max-w-[68px]"
                             style={{ color: COLORS[activePieIndex % COLORS.length] }}
                             title={activePieCategory.name}
                           >
                             {activePieCategory.name}
                           </span>
-                          <span className="text-sm sm:text-base font-black text-slate-800 tracking-tight mt-0.5">
+                          <span className="text-xs sm:text-sm font-black text-slate-800 tracking-tight mt-0.5">
                             {formatCurrency(activePieCategory.value, currency)}
                           </span>
-                          <span className="text-[9px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-full mt-0.5 border border-teal-100">
+                          <span className="text-[8px] font-bold text-teal-700 bg-teal-50 px-1 py-0.2 rounded-full mt-0.5 border border-teal-100">
                             {displayExpenses > 0 ? Math.round((activePieCategory.value / displayExpenses) * 100) : 100}%
                           </span>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center leading-tight">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                             Total Spent
                           </span>
-                          <span className="text-sm sm:text-base font-black text-slate-800 tracking-tight mt-0.5">
+                          <span className="text-xs sm:text-sm font-black text-slate-800 tracking-tight mt-0.5">
                             {formatCurrency(displayExpenses, currency)}
                           </span>
-                          <span className="text-[9px] font-semibold text-slate-400 mt-0.5">
+                          <span className="text-[8px] font-semibold text-slate-400 mt-0.5">
                             {expenseDistribution.length} {expenseDistribution.length === 1 ? "Category" : "Categories"}
                           </span>
                         </div>
@@ -721,6 +709,38 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
+
+            {/* Category Pills directly below the Donut Chart (Outer box removed) */}
+            {expenseDistribution && expenseDistribution.length > 0 && (
+              <div className="mt-3.5 flex flex-wrap items-center justify-center gap-1.5 max-h-[88px] overflow-y-auto custom-scrollbar px-1 py-0.5">
+                {expenseDistribution.map((entry, i) => {
+                  const isSelected = activePieIndex === i;
+                  const color = COLORS[i % COLORS.length];
+                  const percent = displayExpenses > 0 ? Math.round((entry.value / displayExpenses) * 100) : 0;
+                  return (
+                    <button
+                      key={`cat-pill-${entry.name}`}
+                      type="button"
+                      onMouseEnter={() => setActivePieIndex(i)}
+                      onMouseLeave={() => setActivePieIndex(null)}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-150 border cursor-pointer ${
+                        isSelected
+                          ? "bg-white text-slate-900 border-slate-300 shadow-xs scale-[1.03]"
+                          : "bg-slate-50/90 hover:bg-white text-slate-600 hover:text-slate-800 border-slate-200/80 hover:border-slate-300 shadow-2xs"
+                      }`}
+                      title={`${entry.name}: ${formatCurrency(entry.value, currency)} (${percent}%)`}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0 ring-1 ring-black/5"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="truncate max-w-[85px] leading-tight">{entry.name}</span>
+                      <span className="text-[10px] font-bold text-slate-400 ml-0.5">{percent}%</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -784,28 +804,56 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Interactive Search Bar */}
-          <div className="my-3.5 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by description, category, or amount..."
-              className="w-full pl-10 pr-9 py-2.5 bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200/80 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 rounded-2xl text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 transition-all duration-200 shadow-2xs outline-none"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 p-1 rounded-full transition-all cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+          {/* Interactive Search Bar & Date Picker */}
+          <div className="my-3.5 flex flex-col sm:flex-row items-center gap-2">
+            <div className="relative flex-1 w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by description, category, or amount..."
+                className="w-full pl-10 pr-9 py-2.5 bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200/80 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 rounded-2xl text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 transition-all duration-200 shadow-2xs outline-none"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 p-1 rounded-full transition-all cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="relative w-full sm:w-auto">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  if (e.target.value) setTimeFrame("custom");
+                }}
+                title="Filter by particular date"
+                className="w-full sm:w-auto bg-slate-50/80 hover:bg-slate-50 border border-slate-200/80 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 rounded-2xl pl-3.5 pr-8 py-2.5 text-xs sm:text-sm font-bold text-slate-700 transition-all shadow-2xs outline-none cursor-pointer"
+              />
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDate("");
+                    setTimeFrame("monthly");
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200/60 transition cursor-pointer"
+                  title="Clear date"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Transactions List with Executive Micro-Hover Styling */}
-          <div className="flex-1 space-y-2 overflow-y-auto max-h-[360px] pr-1">
+          <div className="flex-1 space-y-2 overflow-y-auto max-h-[360px] pr-1.5 custom-scrollbar">
             {recentTransactionsList.length > 0 ? (
               recentTransactionsList.map((t) => (
                 <div

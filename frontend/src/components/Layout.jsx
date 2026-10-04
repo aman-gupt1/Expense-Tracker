@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
@@ -23,50 +23,50 @@ const Layout = ({
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalAction, setAuthModalAction] = useState("");
 
-  const handleSetCurrency = (newCurrency) => {
+  const handleSetCurrency = useCallback((newCurrency) => {
     setCurrency(newCurrency);
     try {
       localStorage.setItem("expense_currency", newCurrency);
     } catch (e) {
       console.warn("Could not save currency to localStorage", e);
     }
-  };
+  }, []);
 
   // Intercept guest actions and prompt authentication smoothly
-  const requestAuth = (actionName = "perform this action") => {
+  const requestAuth = useCallback((actionName = "perform this action") => {
     if (isGuest) {
       setAuthModalAction(actionName);
       setAuthModalOpen(true);
       return true;
     }
     return false;
-  };
+  }, [isGuest]);
 
-  const handleAddTransaction = async (transaction) => {
+  const handleAddTransaction = useCallback(async (transaction) => {
     if (isGuest) {
       requestAuth("add a transaction");
       return false;
     }
     if (addTransaction) return await addTransaction(transaction);
-  };
+  }, [isGuest, requestAuth, addTransaction]);
 
-  const handleEditTransaction = async (id, transaction) => {
+  const handleEditTransaction = useCallback(async (id, transaction) => {
     if (isGuest) {
       requestAuth("edit this transaction");
       return false;
     }
     if (editTransaction) return await editTransaction(id, transaction);
-  };
+  }, [isGuest, requestAuth, editTransaction]);
 
-  const handleDeleteTransaction = async (id, type) => {
+  const handleDeleteTransaction = useCallback(async (id, type) => {
     if (isGuest) {
       requestAuth("delete this transaction");
       return false;
     }
     if (deleteTransaction) return await deleteTransaction(id, type);
-  };
+  }, [isGuest, requestAuth, deleteTransaction]);
 
-  const outletContext = {
+  const outletContext = useMemo(() => ({
     transactions,
     isGuest,
     requestAuth,
@@ -77,7 +77,18 @@ const Layout = ({
     deleteTransaction: handleDeleteTransaction,
     refreshTransactions,
     user,
-  };
+  }), [
+    transactions,
+    isGuest,
+    requestAuth,
+    currency,
+    handleSetCurrency,
+    handleAddTransaction,
+    handleEditTransaction,
+    handleDeleteTransaction,
+    refreshTransactions,
+    user,
+  ]);
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex w-full antialiased text-slate-800">

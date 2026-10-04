@@ -105,8 +105,14 @@ const GaugeCard = ({
         </div>
 
         {/* Right Side: Enlarged Bold Radial Gauge Arch */}
-        <div className="w-36 sm:w-48 h-28 sm:h-32 shrink-0 relative flex items-center justify-center">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-36 sm:w-48 h-28 sm:h-32 shrink-0 relative flex items-center justify-center min-w-0 min-h-0">
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            minWidth={0}
+            minHeight={0}
+            initialDimension={{ width: 180, height: 120 }}
+          >
             <RadialBarChart
               data={[{ ...gauge, value: chartValue }]}
               cx="50%"

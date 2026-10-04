@@ -88,24 +88,32 @@ export async function loginUser(req, res) {
 }
 
 // to get login user details
-export async function getCurrentUser(req,res){
-    try {
-        const user=await User.findById(req.user.id).select("name email");
-        if(!user){
-            return res.status(404).json({
-                success:false,
-                message:"User not found"
-            });
-        }
-        res.json({success:true,user});
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            success:false,
-            message:"Server Error"
-        });
+export async function getCurrentUser(req, res) {
+  try {
+    const userId = req.user?._id || req.user?.id;
+    const user = req.user || (await User.findById(userId).select("name email"));
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
-
+    res.json({
+      success: true,
+      user: {
+        id: user._id || user.id,
+        _id: user._id || user.id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("getCurrentUser error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
 }   
 
     // to upadate a user profile

@@ -43,7 +43,6 @@ const Navbar = ({
   const handleLogout = () => {
     setMenuOpen(false);
     onLogout?.();
-    navigate("/login");
   };
 
   useEffect(() => {
@@ -61,7 +60,7 @@ const Navbar = ({
   }, []);
 
   return (
-    <header className="sticky top-0 z-20 h-16 bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-xs transition-all w-full">
+    <header className="sticky top-0 z-40 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-100 shadow-xs transition-all w-full">
       <div className="h-full flex items-center justify-between px-4 sm:px-6 lg:px-8 w-full">
         {/* LEFT: Mobile Brand/Menu & Desktop Breadcrumb */}
         <div className="flex items-center gap-3">
@@ -123,7 +122,7 @@ const Navbar = ({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 mt-2.5 w-60 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100/90 p-2 z-50 text-xs shadow-slate-900/10"
+                  className="absolute right-0 mt-2.5 w-60 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-200 p-2 z-50 text-xs"
                 >
                   <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -189,9 +188,10 @@ const Navbar = ({
             <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 to="/login"
-                className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-slate-700 hover:text-teal-600 hover:bg-slate-100 transition"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-teal-700 bg-white hover:bg-teal-50/40 border border-teal-400 hover:border-teal-500 shadow-2xs hover:shadow-md hover:shadow-teal-500/25 active:scale-95 transition-all duration-200 cursor-pointer group"
               >
-                Sign In
+                <LogIn className="w-3.5 h-3.5 text-teal-600 transition-colors" />
+                <span>Sign In</span>
               </Link>
 
               <Link
@@ -246,7 +246,7 @@ const Navbar = ({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 6, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-0 mt-2.5 w-72 bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-100/90 p-2 z-50 shadow-slate-900/10 overflow-hidden"
+                    className="absolute right-0 mt-2.5 w-72 bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-200 p-2 z-50 overflow-hidden"
                   >
                     {/* Header Card with Gradient Accent */}
                     <div className="relative p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/70 via-cyan-50/40 to-slate-50/60 border border-teal-100/60 mb-2 overflow-hidden">

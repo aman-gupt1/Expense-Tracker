@@ -105,7 +105,8 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
   const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" });
   const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false });
   const [passwordErrors, setPasswordErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Preference switches state for interactive feel
@@ -132,12 +133,12 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
 
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
+        onLogout?.();
         navigate("/login");
         return null;
       }
 
       try {
-        setLoading(true);
         const config = {
           method,
           url: `${BASE_URL}${endpoint}`,
@@ -149,14 +150,13 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
       } catch (error) {
         console.error(`${method} request error:`, error);
         if (error.response?.status === 401) {
+          onLogout?.();
           navigate("/login");
         }
         throw error;
-      } finally {
-        setLoading(false);
       }
     },
-    [navigate, isGuest, requestAuth]
+    [navigate, isGuest, requestAuth, onLogout]
   );
 
   useEffect(() => {
@@ -172,20 +172,36 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
       setTempUser(active);
     }
 
+    let isMounted = true;
     const fetchUserData = async () => {
       try {
         const data = await handleApiRequest("get", "/user/me");
-        if (data) {
+        if (data && isMounted) {
           const userData = data.user || data;
           setUser(userData);
           setTempUser(userData);
+          onUpdateProfile?.(userData);
         }
       } catch (error) {
-        toast.error("Failed to load user data");
+        if (!isMounted) return;
+        console.warn("fetchUserData warning:", error?.message || error);
+        if (error.response?.status === 401) {
+          toast.info("Session expired. Please log in again.");
+          return;
+        }
+        // Only show error if we don't already have user data from props or context
+        if (!propUser && !contextUser) {
+          toast.error("Failed to load user data. Please check your connection.");
+        }
       }
     };
+
     fetchUserData();
-  }, [handleApiRequest, isGuest, propUser, contextUser]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [handleApiRequest, isGuest, propUser, contextUser, onUpdateProfile]);
 
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -215,8 +231,16 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
       requestAuth("save profile changes");
       return;
     }
+    if (!tempUser.name?.trim() || !tempUser.email?.trim()) {
+      toast.error("Please enter a valid name and email address.");
+      return;
+    }
     try {
-      const data = await handleApiRequest("put", "/user/profile", tempUser);
+      setIsProfileSaving(true);
+      const data = await handleApiRequest("put", "/user/profile", {
+        name: tempUser.name.trim(),
+        email: tempUser.email.trim(),
+      });
       if (data) {
         const updatedUser = data.user || data;
         setUser(updatedUser);
@@ -227,6 +251,8 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setIsProfileSaving(false);
     }
   };
 
@@ -240,6 +266,10 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
       requestAuth("change account password");
       return;
     }
+    setIsPasswordUpdating(false);
+    setPasswordData({ current: "", new: "", confirm: "" });
+    setPasswordErrors({});
+    setShowPassword({ current: false, new: false, confirm: false });
     setShowPasswordModal(true);
   };
 
@@ -248,10 +278,12 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
     if (!passwordData.current) errors.current = "Current password is required";
     if (!passwordData.new) {
       errors.new = "New password is required";
-    } else if (passwordData.new.length < 6) {
-      errors.new = "Password must be at least 6 characters";
+    } else if (passwordData.new.length < 8) {
+      errors.new = "Password must be at least 8 characters";
     }
-    if (passwordData.new !== passwordData.confirm) {
+    if (!passwordData.confirm) {
+      errors.confirm = "Confirm password is required";
+    } else if (passwordData.new !== passwordData.confirm) {
       errors.confirm = "Passwords do not match";
     }
     setPasswordErrors(errors);
@@ -269,33 +301,37 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
     if (!validatePassword()) return;
 
     try {
+      setIsPasswordUpdating(true);
       await handleApiRequest("put", "/user/password", {
         currentPassword: passwordData.current,
         newPassword: passwordData.new,
       });
       toast.success("Password changed successfully!");
-      setShowPasswordModal(false);
-      setPasswordData({ current: "", new: "", confirm: "" });
-      setPasswordErrors({});
-      setShowPassword({ current: false, new: false, confirm: false });
+      closePasswordModal();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to change password");
+    } finally {
+      setIsPasswordUpdating(false);
     }
   };
 
   const handleLogout = useCallback(() => {
-    onLogout?.();
-    navigate("/login");
-  }, [onLogout, navigate]);
+    if (isGuest) {
+      navigate("/login");
+    } else {
+      onLogout?.();
+    }
+  }, [isGuest, onLogout, navigate]);
 
   const closePasswordModal = useCallback(() => {
-    if (!loading) {
+    if (!isPasswordUpdating) {
       setShowPasswordModal(false);
+      setIsPasswordUpdating(false);
       setPasswordData({ current: "", new: "", confirm: "" });
       setPasswordErrors({});
       setShowPassword({ current: false, new: false, confirm: false });
     }
-  }, [loading]);
+  }, [isPasswordUpdating]);
 
   const passwordStrength = calculatePasswordStrength(passwordData.new);
 
@@ -334,53 +370,53 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
         className="relative bg-white rounded-3xl border border-slate-200/70 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden group"
       >
         {/* Cover Decorative Banner */}
-        <div className="h-32 sm:h-44 w-full bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-500 relative overflow-hidden">
+        <div className="h-20 sm:h-24 w-full bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-500 relative overflow-hidden">
           {/* Subtle geometric circles overlay */}
           <div className="absolute inset-0 opacity-15">
-            <div className="absolute -top-12 -left-12 w-64 h-64 rounded-full border-4 border-white/30" />
-            <div className="absolute top-8 right-12 w-80 h-80 rounded-full border-2 border-white/25" />
-            <div className="absolute -bottom-16 left-1/3 w-48 h-48 rounded-full bg-white/20 blur-xl" />
+            <div className="absolute -top-10 -left-10 w-48 h-48 rounded-full border-4 border-white/30" />
+            <div className="absolute top-4 right-8 w-60 h-60 rounded-full border-2 border-white/25" />
+            <div className="absolute -bottom-12 left-1/3 w-36 h-36 rounded-full bg-white/20 blur-lg" />
           </div>
 
           {/* Top-right Workspace Tag */}
-          <div className="absolute top-4 right-4 sm:top-5 sm:right-6">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <div className="absolute top-3 right-4 sm:top-3.5 sm:right-5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/20 backdrop-blur-md text-white border border-white/30 shadow-xs">
+              <Sparkles className="w-3 h-3 text-amber-300" />
               <span>Personal Finance Workspace</span>
             </span>
           </div>
         </div>
 
         {/* Profile Info & Avatar */}
-        <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-0 relative">
-          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 -mt-14 sm:-mt-16 mb-5">
+        <div className="px-5 sm:px-7 pb-4 sm:pb-5 pt-0 relative">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-3 -mt-9 sm:-mt-10 mb-3">
             {/* Avatar with Glow and Online Indicator */}
             <div className="relative group/avatar cursor-pointer">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-teal-500 via-teal-600 to-cyan-600 p-1 bg-white shadow-xl shadow-teal-500/20 flex items-center justify-center text-white text-3xl sm:text-4xl font-black ring-4 ring-white transition-transform duration-300 group-hover/avatar:scale-105">
+              <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-600 to-cyan-600 p-0.5 bg-white shadow-lg shadow-teal-500/20 flex items-center justify-center text-white text-2xl sm:text-3xl font-black ring-4 ring-white transition-transform duration-300 group-hover/avatar:scale-105">
                 {initial}
               </div>
               <div
-                className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 border-3 border-white rounded-full shadow-sm"
+                className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full shadow-xs"
                 title="Account is Active"
               />
             </div>
 
             {/* Quick Action Buttons */}
-            <div className="flex items-center gap-2.5 sm:mb-2 w-full sm:w-auto justify-center">
+            <div className="flex items-center gap-2 sm:mb-1 w-full sm:w-auto justify-center">
               {!editMode && (
                 <button
                   onClick={handleEditClick}
-                  className="flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-md shadow-teal-500/20 hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-sm shadow-teal-500/20 hover:shadow-md transition-all active:scale-95 cursor-pointer"
                 >
-                  <Edit3 className="w-4 h-4" />
+                  <Edit3 className="w-3.5 h-3.5" />
                   <span>Edit Profile</span>
                 </button>
               )}
               <button
                 onClick={handlePasswordModalOpen}
-                className="flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all active:scale-95 cursor-pointer"
               >
-                <KeyRound className="w-4 h-4 text-slate-500" />
+                <KeyRound className="w-3.5 h-3.5 text-slate-500" />
                 <span>Password</span>
               </button>
             </div>
@@ -388,27 +424,27 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
 
           {/* User Details */}
           <div className="text-center sm:text-left space-y-1">
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight leading-tight">
                 {user.name || (isGuest ? "Guest User" : "Loading...")}
               </h1>
               {isGuest ? (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
                   Guest Mode
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-700 border border-teal-200/80">
-                  <BadgeCheck className="w-4 h-4 text-teal-600" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80">
+                  <BadgeCheck className="w-3.5 h-3.5 text-teal-600" />
                   Verified Pro
                 </span>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-slate-500 text-xs sm:text-sm pt-1">
-              <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200/60">
-                <Mail className="w-3.5 h-3.5 text-slate-400" />
-                <span>{user.email || "guest@example.com"}</span>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-slate-500 text-xs pt-0.5">
+              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200/60">
+                <Mail className="w-3 h-3 text-slate-400" />
+                <span className="text-xs">{user.email || "guest@example.com"}</span>
                 <button
                   onClick={handleCopyEmail}
                   className="ml-1 text-slate-400 hover:text-teal-600 transition cursor-pointer p-0.5 rounded"
@@ -422,48 +458,48 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
                 </button>
               </div>
 
-              <div className="flex items-center gap-1 text-emerald-600 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex items-center gap-1 text-emerald-600 font-medium text-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Synchronized Cloud Account</span>
               </div>
             </div>
           </div>
 
-          {/* Integrated Quick Stats Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-6 border-t border-slate-100">
-            <div className="p-3 bg-slate-50/70 hover:bg-teal-50/40 rounded-2xl border border-slate-100 transition-colors">
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
-                <Activity className="w-3.5 h-3.5 text-teal-600" />
+          {/* Integrated Quick Stats Strip - Compact */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-4 pt-3.5 border-t border-slate-100">
+            <div className="p-2.5 bg-slate-50/70 hover:bg-teal-50/40 rounded-xl border border-slate-100 transition-colors">
+              <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-semibold">
+                <Activity className="w-3 h-3 text-teal-600" />
                 <span>Total Records</span>
               </div>
-              <p className="text-lg font-extrabold text-slate-800 mt-1">
+              <p className="text-base font-extrabold text-slate-800 mt-0.5">
                 {transactions.length}{" "}
-                <span className="text-xs font-normal text-slate-400">entries</span>
+                <span className="text-[11px] font-normal text-slate-400">entries</span>
               </p>
             </div>
 
-            <div className="p-3 bg-slate-50/70 hover:bg-teal-50/40 rounded-2xl border border-slate-100 transition-colors">
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
-                <Coins className="w-3.5 h-3.5 text-cyan-600" />
+            <div className="p-2.5 bg-slate-50/70 hover:bg-teal-50/40 rounded-xl border border-slate-100 transition-colors">
+              <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-semibold">
+                <Coins className="w-3 h-3 text-cyan-600" />
                 <span>Display Currency</span>
               </div>
-              <p className="text-lg font-extrabold text-teal-600 mt-1">{currency}</p>
+              <p className="text-base font-extrabold text-teal-600 mt-0.5">{currency}</p>
             </div>
 
-            <div className="p-3 bg-slate-50/70 hover:bg-teal-50/40 rounded-2xl border border-slate-100 transition-colors">
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="p-2.5 bg-slate-50/70 hover:bg-teal-50/40 rounded-xl border border-slate-100 transition-colors">
+              <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-semibold">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" />
                 <span>Data Security</span>
               </div>
-              <p className="text-lg font-extrabold text-emerald-600 mt-1">256-Bit SSL</p>
+              <p className="text-base font-extrabold text-emerald-600 mt-0.5">256-Bit SSL</p>
             </div>
 
-            <div className="p-3 bg-slate-50/70 hover:bg-teal-50/40 rounded-2xl border border-slate-100 transition-colors">
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
+            <div className="p-2.5 bg-slate-50/70 hover:bg-teal-50/40 rounded-xl border border-slate-100 transition-colors">
+              <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-semibold">
                 <BadgeCheck className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Account Role</span>
               </div>
-              <p className="text-lg font-extrabold text-slate-800 mt-1">Owner</p>
+              <p className="text-base font-extrabold text-slate-800 mt-0.5">Owner</p>
             </div>
           </div>
         </div>
@@ -556,8 +592,8 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
                       name="name"
                       value={tempUser.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-2xl transition outline-none"
-                      disabled={loading}
+                      className="w-full px-4 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-2xl transition outline-none disabled:opacity-60"
+                      disabled={isProfileSaving}
                     />
                   </div>
 
@@ -570,24 +606,24 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
                       name="email"
                       value={tempUser.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-2xl transition outline-none"
-                      disabled={loading}
+                      className="w-full px-4 py-2.5 text-sm bg-slate-50 focus:bg-white border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-2xl transition outline-none disabled:opacity-60"
+                      disabled={isProfileSaving}
                     />
                   </div>
 
                   <div className="flex gap-2.5 pt-3">
                     <button
                       onClick={handleSaveProfile}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-md shadow-teal-500/20 transition active:scale-95 cursor-pointer"
-                      disabled={loading}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-md shadow-teal-500/20 transition active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={isProfileSaving}
                     >
                       <Save className="w-4 h-4" />
-                      <span>{loading ? "Saving..." : "Save Changes"}</span>
+                      <span>{isProfileSaving ? "Saving..." : "Save Changes"}</span>
                     </button>
                     <button
                       onClick={handleCancelEdit}
                       className="py-2.5 px-4 rounded-2xl text-xs sm:text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition active:scale-95 cursor-pointer"
-                      disabled={loading}
+                      disabled={isProfileSaving}
                     >
                       Cancel
                     </button>
@@ -891,10 +927,10 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
         isOpen={showPasswordModal}
         onRequestClose={closePasswordModal}
         contentLabel="Change Password"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none"
-        overlayClassName="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50"
-        shouldCloseOnOverlayClick={!loading}
-        shouldCloseOnEsc={!loading}
+        className="fixed inset-0 z-[60] flex items-center justify-center p-4 outline-none"
+        overlayClassName="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60]"
+        shouldCloseOnOverlayClick={!isPasswordUpdating}
+        shouldCloseOnEsc={!isPasswordUpdating}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 15 }}
@@ -913,7 +949,7 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
             <button
               onClick={closePasswordModal}
               className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-              disabled={loading}
+              disabled={isPasswordUpdating}
             >
               <X className="w-5 h-5" />
             </button>
@@ -928,18 +964,18 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
               showField={showPassword.current}
               onToggle={() => togglePasswordVisibility("current")}
               onChange={handlePasswordChange}
-              disabled={loading}
+              disabled={isPasswordUpdating}
             />
 
             <PasswordInput
               name="new"
-              label="New Password"
+              label="New Password (min 8 chars)"
               value={passwordData.new}
               error={passwordErrors.new}
               showField={showPassword.new}
               onToggle={() => togglePasswordVisibility("new")}
               onChange={handlePasswordChange}
-              disabled={loading}
+              disabled={isPasswordUpdating}
             />
 
             {/* Live Password Strength Meter */}
@@ -968,22 +1004,22 @@ const Profile = ({ onUpdateProfile, onLogout, user: propUser }) => {
               showField={showPassword.confirm}
               onToggle={() => togglePasswordVisibility("confirm")}
               onChange={handlePasswordChange}
-              disabled={loading}
+              disabled={isPasswordUpdating}
             />
 
             <div className="flex gap-2.5 pt-4">
               <button
                 type="submit"
-                className="flex-1 py-2.5 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-md shadow-teal-500/20 transition active:scale-95 cursor-pointer"
-                disabled={loading}
+                className="flex-1 py-2.5 px-4 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-md shadow-teal-500/20 transition active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={isPasswordUpdating}
               >
-                {loading ? "Updating..." : "Update Password"}
+                {isPasswordUpdating ? "Updating..." : "Update Password"}
               </button>
               <button
                 type="button"
                 onClick={closePasswordModal}
                 className="py-2.5 px-4 rounded-2xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition active:scale-95 cursor-pointer"
-                disabled={loading}
+                disabled={isPasswordUpdating}
               >
                 Cancel
               </button>

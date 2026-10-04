@@ -4,22 +4,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   GLOBAL & CUSTOM SLEEK SCROLLBAR STYLING (MODERN FIGMA SAAS SLIDER)
+   ========================================================================== */
+*{
+  user-select: none;
+}
+/* Standard CSS scrollbar properties for modern browsers (Firefox, Chrome, Edge) */
+html, body, *, .custom-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+}
+
+/* WebKit scrollbar track & sizing (Chrome, Safari, Edge) */
+::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 5px !important;
+  height: 5px !important;
 }
 
+/* WebKit Track: Transparent and sleek */
+::-webkit-scrollbar-track,
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
+  background: transparent !important;
+  border-radius: 9999px !important;
 }
 
+/* WebKit Thumb: Smooth rounded pill with subtle hover reaction */
+::-webkit-scrollbar-thumb,
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
+  background: #cbd5e1 !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.2s ease !important;
 }
 
+::-webkit-scrollbar-thumb:hover,
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: #94a3b8 !important;
+}
+
+/* WebKit Buttons: Remove ugly Windows triangle up/down arrows completely */
+::-webkit-scrollbar-button,
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* WebKit Corner: Clean transparent corner */
+::-webkit-scrollbar-corner,
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Utility to completely hide scrollbar when desired */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
 .modal {
@@ -60,4 +104,117 @@
   font-family: "Lobster", sans-serif;
   font-weight: 400;
   font-style: normal;
+}
+
+/* ==========================================================================
+   CUSTOM TOASTIFY NOTIFICATIONS (COMPACT, FIGMA SAAS PILL, TOP-CENTER)
+   ========================================================================== */
+
+/* Top-Center Container: Aligns compact pills centered on screen */
+.Toastify__toast-container--top-center {
+  top: 1.25rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  max-width: 92vw !important;
+  min-width: 260px !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  pointer-events: none !important;
+  z-index: 99999 !important;
+}
+
+/* Base Toast Pill: Low height, smooth curves, subtle glow */
+.Toastify__toast {
+  pointer-events: auto !important;
+  min-height: 40px !important;
+  border-radius: 9999px !important;
+  padding: 7px 16px !important;
+  margin-bottom: 0.5rem !important;
+  font-family: inherit !important;
+  letter-spacing: -0.01em !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  display: flex !important;
+  align-items: center !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Toast Body Text */
+.Toastify__toast-body {
+  padding: 0 4px !important;
+  margin: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Toast Icons */
+.Toastify__toast-icon {
+  width: 17px !important;
+  height: 17px !important;
+  margin-inline-end: 8px !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  flex-shrink: 0 !important;
+}
+
+/* Toast Close Button */
+.Toastify__close-button {
+  color: #ffffff !important;
+  opacity: 0.75 !important;
+  align-self: center !important;
+  margin-left: 8px !important;
+  padding: 2px !important;
+  transition: opacity 0.15s ease, transform 0.15s ease !important;
+}
+.Toastify__close-button:hover {
+  opacity: 1 !important;
+  transform: scale(1.1) !important;
+}
+
+/* Sleek Thin Progress Bar */
+.Toastify__progress-bar {
+  height: 2px !important;
+  bottom: 0 !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* ===== 1. SUCCESS TOAST: EXACT COLOR FROM USER IMAGE (TEAL -> CYAN GRADIENT) ===== */
+.Toastify__toast--success,
+.Toastify__toast--colored.Toastify__toast--success {
+  background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 24px -3px rgba(13, 148, 136, 0.45), 0 3px 6px -2px rgba(8, 145, 178, 0.25) !important;
+}
+
+/* ===== 2. ERROR / FAIL TOAST: VIBRANT RED ===== */
+.Toastify__toast--error,
+.Toastify__toast--colored.Toastify__toast--error {
+  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 24px -3px rgba(225, 29, 72, 0.45), 0 3px 6px -2px rgba(244, 63, 94, 0.25) !important;
+}
+
+/* ===== 3. INFO TOAST: CLEAN SKY BLUE ===== */
+.Toastify__toast--info,
+.Toastify__toast--colored.Toastify__toast--info {
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 24px -3px rgba(2, 132, 199, 0.45), 0 3px 6px -2px rgba(14, 165, 233, 0.25) !important;
+}
+
+/* ===== 4. WARNING TOAST: AMBER ACCENT ===== */
+.Toastify__toast--warning,
+.Toastify__toast--colored.Toastify__toast--warning {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 24px -3px rgba(217, 119, 6, 0.45), 0 3px 6px -2px rgba(245, 158, 11, 0.25) !important;
 }

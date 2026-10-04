@@ -9,7 +9,7 @@ import Expense from "./pages/Expenses";
 import Profile from "./pages/Profile";
 import axios from "axios";
 import { dummyTransactions } from "./assets/dummy";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast, Slide } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -186,7 +186,11 @@ function App() {
 
   const handleLogout = () => {
     clearAuth();
-    navigate("/login");
+    toast.success("Logged out successfully", {
+      toastId: "logout-success",
+      autoClose: 2000,
+    });
+    navigate("/", { replace: true });
   };
 
   const handleLogin = async (userData, remember = false, tokenFromApi = null) => {
@@ -242,15 +246,16 @@ function App() {
     <>
       <ScrollToTop />
       <ToastContainer
-        position="top-right"
-        autoClose={2500}
+        position="top-center"
+        autoClose={2200}
         hideProgressBar={false}
         newestOnTop
         closeOnClick
         rtl={false}
-        pauseOnFocusLoss
+        pauseOnFocusLoss={false}
         draggable
         pauseOnHover
+        transition={Slide}
         theme="colored"
       />
       <Routes>

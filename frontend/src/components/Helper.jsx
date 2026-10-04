@@ -1,7 +1,31 @@
-export const getTimeFrameRange = (timeFrame) => {
+export const getTimeFrameRange = (timeFrame, customDate = null) => {
   const now = new Date();
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
+
+  if (customDate) {
+    let target;
+    if (typeof customDate === "string") {
+      const parts = customDate.split("-").map(Number);
+      if (parts.length === 3) {
+        target = new Date(parts[0], parts[1] - 1, parts[2]);
+      } else {
+        target = new Date(customDate);
+      }
+    } else {
+      target = new Date(customDate);
+    }
+    const dayStart = new Date(target);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(target);
+    dayEnd.setHours(23, 59, 59, 999);
+    return {
+      start: dayStart,
+      end: dayEnd,
+      label: target.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      isCustomDate: true,
+    };
+  }
 
   if (timeFrame === "daily") {
     return { start, end: new Date(now), label: "Today" };
@@ -32,10 +56,35 @@ export const getTimeFrameRange = (timeFrame) => {
   return { start: startOfMonth, end: new Date(now), label: "This Month" };
 };
 
-export const getPreviousTimeFrameRange = (timeFrame) => {
+export const getPreviousTimeFrameRange = (timeFrame, customDate = null) => {
   const now = new Date();
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
+
+  if (customDate) {
+    let target;
+    if (typeof customDate === "string") {
+      const parts = customDate.split("-").map(Number);
+      if (parts.length === 3) {
+        target = new Date(parts[0], parts[1] - 1, parts[2]);
+      } else {
+        target = new Date(customDate);
+      }
+    } else {
+      target = new Date(customDate);
+    }
+    const prevDay = new Date(target);
+    prevDay.setDate(target.getDate() - 1);
+    const dayStart = new Date(prevDay);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(prevDay);
+    dayEnd.setHours(23, 59, 59, 999);
+    return {
+      start: dayStart,
+      end: dayEnd,
+      label: prevDay.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    };
+  }
 
   if (timeFrame === "daily") {
     const yesterday = new Date(start);
@@ -126,20 +175,33 @@ export const calculateData = (transactions) => {
   return { ...totals, savings: totals.income - totals.expenses };
 };
 
-export const generateChartPoints = (timeFrame) => {
+export const generateChartPoints = (timeFrame, timeFrameRange = null) => {
   const now = new Date();
   const points = [];
 
-  if (timeFrame === "daily") {
-    // Generate 24 hours for daily view
+  const isSingleDay =
+    timeFrame === "daily" ||
+    timeFrame === "custom" ||
+    timeFrameRange?.isCustomDate ||
+    (timeFrameRange?.start &&
+      timeFrameRange?.end &&
+      timeFrameRange.end.getTime() - timeFrameRange.start.getTime() <= 86400000 + 1000);
+
+  if (isSingleDay) {
+    const baseDate = timeFrameRange?.start ? new Date(timeFrameRange.start) : new Date(now);
+    // Generate 24 hours for that single day
     for (let i = 0; i < 24; i++) {
-      const hour = new Date(now);
+      const hour = new Date(baseDate);
       hour.setHours(i, 0, 0, 0);
       points.push({
         date: hour,
-        label: hour.toLocaleTimeString([], { hour: "2-digit" }),
+        label: hour.toLocaleTimeString([], { hour: "numeric", hour12: true }),
         hour: i,
-        isCurrent: i === now.getHours(),
+        isCurrent:
+          i === now.getHours() &&
+          baseDate.getFullYear() === now.getFullYear() &&
+          baseDate.getMonth() === now.getMonth() &&
+          baseDate.getDate() === now.getDate(),
       });
     }
   } else if (timeFrame === "weekly") {

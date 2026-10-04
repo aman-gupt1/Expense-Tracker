@@ -13,13 +13,32 @@ import dashboardRouter from './routes/dashboardRoute.js';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors())
-// cors middleware 
-app.use(cors({
-    origin:process.env.FRONTEND_URL,
-    origin:"http://localhost:5174",
-    credentials:true
-}))
+// Allowed frontend origins
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+].filter(Boolean);
+
+// CORS middleware
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        /^http:\/\/localhost(:\d+)?$/.test(origin)
+      ) {
+        return callback(null, origin);
+      }
+      return callback(null, origin);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // console.log("FRONTEND_URL",process.env.FRONTEND_URL )
 
