@@ -12,6 +12,12 @@
   </p>
 
   <p align="center">
+    <a href="https://aman-expensetracker.vercel.app/" target="_blank">
+      <img src="https://img.shields.io/badge/🚀_Live_Demo-aman--expensetracker.vercel.app-0d9488?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+    </a>
+  </p>
+
+  <p align="center">
     <img src="https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19" />
     <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
     <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js" />
@@ -72,7 +78,7 @@ Configure `.env` in `backend/`:
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=https://aman-expensetracker.vercel.app
 ```
 ```bash
 npm run dev
@@ -86,6 +92,7 @@ npm install
 npm run dev
 # App running at http://localhost:5173
 ```
+*Live Production: [https://aman-expensetracker.vercel.app](https://aman-expensetracker.vercel.app)*
 
 ---
 
