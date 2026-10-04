@@ -54,7 +54,7 @@ const Pagination = ({
 
   return (
     <div
-      className={`-mx-5 sm:-mx-6 -mb-4 sm:-mb-5 px-5 sm:px-6 py-3.5 mt-4 border-t ${theme.footerBg} flex flex-col sm:flex-row items-center justify-between gap-3 transition-all`}
+      className={`-mx-5 sm:-mx-6 -mb-4 sm:-mb-5 px-3.5 sm:px-6 py-3.5 mt-4 border-t ${theme.footerBg} flex flex-col sm:flex-row items-center justify-between gap-3 transition-all`}
     >
       {/* Records count & Rows per page */}
       <div className="flex flex-wrap items-center gap-2.5 text-xs font-medium w-full sm:w-auto justify-between sm:justify-start">
@@ -114,7 +114,7 @@ const Pagination = ({
         </button>
 
         {/* Page numbers */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 max-w-full overflow-x-auto no-scrollbar py-0.5">
           {pages.map((p, index) => {
             if (p === "...") {
               return (

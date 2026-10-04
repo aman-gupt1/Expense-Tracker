@@ -630,7 +630,7 @@ const cardItemVariants = {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={handleAddClick}
-              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/35 transition-all cursor-pointer group active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/35 transition-all cursor-pointer group active:scale-[0.98] w-full sm:w-auto"
             >
               <div className="p-1 rounded-lg bg-white/20 group-hover:rotate-90 transition-transform duration-300">
                 <Plus className="w-4 h-4 stroke-[2.5]" />

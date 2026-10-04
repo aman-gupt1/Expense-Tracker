@@ -344,7 +344,7 @@ const Dashboard = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={handleAddButtonClick}
-              className="flex items-center gap-2 bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-teal-500/25 hover:shadow-xl hover:shadow-teal-500/35 transition-all cursor-pointer group/cta"
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-teal-500/25 hover:shadow-xl hover:shadow-teal-500/35 transition-all cursor-pointer group/cta w-full sm:w-auto"
             >
               <div className="p-1 rounded-lg bg-white/20 group-hover/cta:rotate-90 transition-transform duration-300">
                 <Plus className="w-3.5 h-3.5" />

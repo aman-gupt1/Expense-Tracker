@@ -247,7 +247,7 @@ const TimeFrameSelector = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.96 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
-            className="absolute right-0 top-full mt-2.5 z-50 w-72 sm:w-80 p-4 bg-white border border-slate-200 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)] ring-1 ring-black/5 select-none"
+            className="absolute right-0 top-full mt-2.5 z-50 w-72 sm:w-80 max-w-[calc(100vw-2rem)] p-4 bg-white border border-slate-200 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)] ring-1 ring-black/5 select-none"
           >
             {/* Header: Month / Year + Navigation */}
             <div className="flex items-center justify-between mb-3 px-1">

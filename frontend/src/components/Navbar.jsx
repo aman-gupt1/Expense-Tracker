@@ -81,7 +81,7 @@ const Navbar = ({
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-600 via-teal-500 to-cyan-500 flex items-center justify-center text-white shadow-xs">
                 <Wallet className="w-4 h-4 text-white" strokeWidth={2.2} />
               </div>
-              <span className="text-base font-extrabold bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-700 bg-clip-text text-transparent">
+              <span className="hidden sm:inline text-base font-extrabold bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-700 bg-clip-text text-transparent">
                 ExpenseTracker
               </span>
             </div>
@@ -122,7 +122,7 @@ const Navbar = ({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 mt-2.5 w-60 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-200 p-2 z-50 text-xs"
+                  className="absolute left-0 sm:left-auto sm:right-0 mt-2.5 w-60 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-200 p-2 z-50 text-xs"
                 >
                   <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -185,10 +185,10 @@ const Navbar = ({
 
           {/* GUEST CONTROLS: SLEEK SIGN IN / SIGN UP (NO DEMO BADGE) */}
           {isGuest ? (
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-teal-700 bg-white hover:bg-teal-50/40 border border-teal-400 hover:border-teal-500 shadow-2xs hover:shadow-md hover:shadow-teal-500/25 active:scale-95 transition-all duration-200 cursor-pointer group"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-teal-700 bg-white hover:bg-teal-50/40 border border-teal-400 hover:border-teal-500 shadow-2xs hover:shadow-md hover:shadow-teal-500/25 active:scale-95 transition-all duration-200 cursor-pointer group shrink-0"
               >
                 <LogIn className="w-3.5 h-3.5 text-teal-600 transition-colors" />
                 <span>Sign In</span>
@@ -196,10 +196,10 @@ const Navbar = ({
 
               <Link
                 to="/signup"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-sm shadow-teal-500/25 hover:shadow-md transition cursor-pointer"
+                className="flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-sm shadow-teal-500/25 hover:shadow-md transition cursor-pointer shrink-0"
               >
                 <span>Get Started</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />
               </Link>
             </div>
           ) : (
@@ -246,7 +246,7 @@ const Navbar = ({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 6, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-0 mt-2.5 w-72 bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-200 p-2 z-50 overflow-hidden"
+                    className="absolute right-0 mt-2.5 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-200 p-2 z-50 overflow-hidden"
                   >
                     {/* Header Card with Gradient Accent */}
                     <div className="relative p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/70 via-cyan-50/40 to-slate-50/60 border border-teal-100/60 mb-2 overflow-hidden">
